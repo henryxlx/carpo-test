@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd"
+       default-lazy-init="true">
+
+    <description>Carpo Mybatis Configuration</description>
+
+    <!-- MyBatis配置 -->
+    <bean id="sqlSessionFactory1" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="conf/carpo-basis-mybatis-config.xml"/>
+        <!-- 显式指定Mapper文件位置 -->
+        <property name="mapperLocations">
+            <list>
+                <value>classpath*:/com/genghis/carpo/basis/**/*.xml</value>
+                <value>classpath*:/com/genghis/steed/dao/mybatis/*.xml</value>
+            </list>
+        </property>
+        <property name="configurationProperties">
+            <props>
+                <!-- mapUnderscoreToCamelCase属性将表中列名的下划线映射为JavaBean属性的驼峰式命名，默认为false -->
+                <prop key="mapUnderscoreToCamelCase">true</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!-- 扫描basePackage下所有以@MyBatisRepository标识的接口-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.genghis.carpo.basis"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory1"/>
+        <property name="annotationClass" value="org.springframework.stereotype.Repository"/>
+    </bean>
+
+</beans>
