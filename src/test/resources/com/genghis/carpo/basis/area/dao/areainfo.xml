@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD iBatis Mapper 3.0 //EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.genghis.carpo.basis.area.dao.AreaInfoDao">
+
+    <resultMap id="areaInfoList" type="AreaInfoVO">
+        <result property="areaId" column="area_id"/>
+        <result property="areaName" column="area_name"/>
+        <result property="state" column="state"/>
+    </resultMap>
+
+    <select id="getAreaInfoList" resultMap="areaInfoList">
+        SELECT area_id,area_name,state
+        FROM dict_area
+        WHERE state>0 and is_leaf =1
+        ORDER BY area_id
+    </select>
+
+    <insert id="addAreaInfo" useGeneratedKeys="true" keyProperty="areaId">
+        INSERT INTO dict_area(area_name,pid,level,sort_by,is_leaf,state)VALUES
+        ( #{areaName},#{pid},#{level},#{sortBy},#{isLeaf},1)
+    </insert>
+
+    <update id="modifyAreaName">
+        UPDATE dict_area SET area_name = #{areaName},state = #{state}
+        WHERE area_id = #{areaId}
+    </update>
+
+    <select id="getAreaNum" resultType="int">
+        SELECT count(1)
+        FROM employee_info a,ass_area_salesman b
+        WHERE b.area_id = #{idForDelete}
+        AND a.state = 1
+        AND a.employee_id = b.salesman_id
+    </select>
+
+    <update id="updateDictAreaIsLeaf">
+        update dict_area set is_leaf = #{isLeaf} where area_id = #{pid}
+    </update>
+
+    <select id="getMaxDictAreaSortBy" resultType="java.lang.String">
+        SELECT max(sort_by) FROM dict_area WHERE pid=#{pid}
+    </select>
+
+    <update id="deleteAreaInfo">
+        delete from dict_area
+        WHERE area_id = #{idForDelete}
+    </update>
+
+    <select id="checkAreaName" resultType="int">
+        SELECT count(1)
+        FROM dict_area
+        WHERE area_name = #{areaName}
+        <if test="areaId!=null and areaId!=''">
+            AND area_id != #{areaId}
+        </if>
+    </select>
+
+    <select id="getChildNodeOne" resultType="int">
+        SELECT count(1)
+        FROM dict_area
+        WHERE pid = #{pid}
+    </select>
+
+    <select id="getAreaTreeList" resultType="map">
+        SELECT t.area_name name,t.area_id id,t.pid pId,level ,t.sort_by,t.is_leaf,b.dict_value state
+        FROM dict_area t,dict_values b WHERE b.dict_name='state' AND t.state = b.dict_code
+        ORDER BY t.sort_by
+    </select>
+
+    <select id="getAreaInfoById" resultType="AreaInfoVO">
+        select * from dict_area
+        where area_id = #{areaId}
+    </select>
+
+    <select id="getMaxLevelArea" resultType="com.genghis.carpo.basis.area.model.Area">
+        SELECT * FROM dict_area ORDER BY LEVEL DESC LIMIT 0,1
+    </select>
+
+    <select id="getAreaIsLeafByName" resultType="com.genghis.carpo.basis.area.model.Area">
+        select * from dict_area where is_leaf = 1 and area_name = #{areaName}
+    </select>
+    <select id="geMaxAreaLevel" resultType="java.lang.Integer">
+        select ifnull(max(level),1) from dict_area
+    </select>
+
+    <update id="modifyAreaSortBy">
+        update dict_area set sort_by = #{sortBy} where area_id = #{areaId}
+    </update>
+
+    <update id="modifyAreaState">
+        update dict_area set state = #{state} where area_id = #{areaId}
+    </update>
+</mapper>
