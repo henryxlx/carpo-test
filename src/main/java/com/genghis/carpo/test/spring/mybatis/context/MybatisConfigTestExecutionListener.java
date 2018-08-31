@@ -5,8 +5,6 @@ import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -15,7 +13,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
-import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -42,14 +39,14 @@ public class MybatisConfigTestExecutionListener extends AbstractTestExecutionLis
             if (dataSource != null) {
                 SqlSessionFactory sqlSessionFactory = getSqlSessionFactory(testProperty, dataSource);
                 if (sqlSessionFactory != null) {
-                    if (testProperty.classes() != null && testProperty.classes().length > 0) {
+                    if (testProperty.mapperInterfaces() != null && testProperty.mapperInterfaces().length > 0) {
                         ConfigurableApplicationContext configurableApplicationContext =
                                 (ConfigurableApplicationContext) applicationContext;
                         DefaultListableBeanFactory beanFactory =
                                 (DefaultListableBeanFactory) configurableApplicationContext.getBeanFactory();
                         beanFactory.registerSingleton("sqlSessionFactory", sqlSessionFactory);
 
-                        for(Class mapper : testProperty.classes()) {
+                        for(Class mapper : testProperty.mapperInterfaces()) {
                             MapperFactoryBean factoryBean = new MapperFactoryBean();
                             factoryBean.setMapperInterface(mapper);
                             factoryBean.setSqlSessionFactory(sqlSessionFactory);

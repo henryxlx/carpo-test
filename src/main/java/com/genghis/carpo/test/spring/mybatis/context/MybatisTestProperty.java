@@ -29,7 +29,7 @@ public @interface MybatisTestProperty {
     /**
      * The mapper interfaces of the MyBatis mapper
      */
-    Class[] classes() default {};
+    Class[] mapperInterfaces() default {};
 
     /**
      * List of type aliases to register. They can be annotated with {@code Alias}
