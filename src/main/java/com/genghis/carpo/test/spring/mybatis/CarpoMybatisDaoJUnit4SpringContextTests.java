@@ -14,7 +14,6 @@ import org.springframework.test.context.web.ServletTestExecutionListener;
 /**
  * Created by x230-think-joomla on 2018/8/30.
  */
-@ContextConfiguration(locations = {"classpath:carpo-spring-datasource-context-test.xml"})
 @RunWith(SpringRunner.class)
 @TestExecutionListeners({MybatisConfigTestExecutionListener.class,
         DirtiesContextBeforeModesTestExecutionListener.class,

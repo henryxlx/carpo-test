@@ -6,12 +6,14 @@ import com.genghis.carpo.test.spring.mybatis.CarpoMybatisDaoJUnit4SpringContextT
 import com.genghis.carpo.test.spring.mybatis.context.MybatisTestProperty;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * Created by x230-think-joomla on 2018/8/29.
  */
+@ContextConfiguration(locations = {"classpath:carpo-spring-datasource-context-test.xml"})
 @MybatisTestProperty(configLocation = "",
         mapperLocations = {"com/genghis/carpo/basis/area/dao/areainfo.xml"},
         typeAliases = {Area.class},
