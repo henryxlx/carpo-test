@@ -5,6 +5,7 @@ import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -32,36 +33,52 @@ public class MybatisConfigTestExecutionListener extends AbstractTestExecutionLis
 
     @Override
     public void prepareTestInstance(TestContext testContext) throws Exception {
-        MybatisTestProperty testProperty = testContext.getTestClass().getAnnotation(MybatisTestProperty.class);
-        if (testProperty != null) {
-            ApplicationContext applicationContext = testContext.getApplicationContext();
-            DataSource dataSource = applicationContext.getBean(DataSource.class);
-            if (dataSource != null) {
-                SqlSessionFactory sqlSessionFactory = getSqlSessionFactory(testProperty, dataSource);
-                if (sqlSessionFactory != null) {
-                    if (testProperty.mapperInterfaces() != null && testProperty.mapperInterfaces().length > 0) {
-                        ConfigurableApplicationContext configurableApplicationContext =
-                                (ConfigurableApplicationContext) applicationContext;
-                        DefaultListableBeanFactory beanFactory =
-                                (DefaultListableBeanFactory) configurableApplicationContext.getBeanFactory();
-                        beanFactory.registerSingleton("sqlSessionFactory", sqlSessionFactory);
+        MybatisTestProperty testProperty = getMybatisTestProperty(testContext);
+        ApplicationContext applicationContext = testContext.getApplicationContext();
+        DataSource dataSource = getDataSource(applicationContext);
+        SqlSessionFactory sqlSessionFactory = getSqlSessionFactory(testProperty, dataSource);
+        if (testProperty.mapperInterfaces() != null && testProperty.mapperInterfaces().length > 0) {
+            ConfigurableApplicationContext configurableApplicationContext =
+                    (ConfigurableApplicationContext) applicationContext;
+            DefaultListableBeanFactory beanFactory =
+                    (DefaultListableBeanFactory) configurableApplicationContext.getBeanFactory();
+            beanFactory.registerSingleton("sqlSessionFactory", sqlSessionFactory);
 
-                        for(Class mapper : testProperty.mapperInterfaces()) {
-                            MapperFactoryBean factoryBean = new MapperFactoryBean();
-                            factoryBean.setMapperInterface(mapper);
-                            factoryBean.setSqlSessionFactory(sqlSessionFactory);
-                            GenericBeanDefinition definition = new GenericBeanDefinition();
-                            definition.getPropertyValues().add("mapperInterface", mapper);
-                            definition.setBeanClass(MapperFactoryBean.class);
-                            definition.setScope("singleton");
-                            definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-                            String beanName = ClassUtils.getShortName(definition.getBeanClassName());
-                            beanFactory.registerBeanDefinition(beanName, definition);
-                        }
-                    }
-                }
+            for (Class mapper : testProperty.mapperInterfaces()) {
+                MapperFactoryBean factoryBean = new MapperFactoryBean();
+                factoryBean.setMapperInterface(mapper);
+                factoryBean.setSqlSessionFactory(sqlSessionFactory);
+                GenericBeanDefinition definition = new GenericBeanDefinition();
+                definition.getPropertyValues().add("mapperInterface", mapper);
+                definition.setBeanClass(MapperFactoryBean.class);
+                definition.setScope("singleton");
+                definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+                String beanName = ClassUtils.getShortName(definition.getBeanClassName());
+                beanFactory.registerBeanDefinition(beanName, definition);
             }
         }
+    }
+
+    private MybatisTestProperty getMybatisTestProperty(TestContext testContext) {
+        MybatisTestProperty testProperty = testContext.getTestClass().getAnnotation(MybatisTestProperty.class);
+        if (testProperty == null) {
+            logger.error("The annotations MybatisTestProperty for MyBatis integration testing are not found. " +
+                    "Please check the test code.");
+            throw new RuntimeException("The MybatisTestProperty annotation are not found");
+        }
+        return testProperty;
+    }
+
+    private DataSource getDataSource(ApplicationContext applicationContext) {
+        DataSource dataSource;
+        try {
+            dataSource = applicationContext.getBean(DataSource.class);
+        } catch (BeansException e) {
+            logger.error("The data source for MyBatis integration testing is not found. " +
+                    "Please check the configuration of the database connection." + e);
+            throw new RuntimeException("JDBC data source in test context is not found");
+        }
+        return dataSource;
     }
 
     private SqlSessionFactory getSqlSessionFactory(MybatisTestProperty testProperty, DataSource dataSource) {
@@ -73,24 +90,24 @@ public class MybatisConfigTestExecutionListener extends AbstractTestExecutionLis
                 sessionFactory.setConfigLocation(new PathMatchingResourcePatternResolver()
                         .getResource(testProperty.configLocation()));
             } else {
-                logger.info("The configuration file location of Mybatis in your mybatis DAO test is blank! ");
+                logger.warn("The configuration file location of Mybatis in your mybatis DAO test is blank! ");
             }
             if (testProperty.typeAliases() != null && testProperty.typeAliases().length > 0) {
                 sessionFactory.setTypeAliases(testProperty.typeAliases());
             } else {
-                logger.info("The type Aliases used in your mybatis DAO test is empty! ");
+                logger.warn("The type Aliases used in your mybatis DAO test is empty! ");
             }
             if (testProperty.mapperLocations() != null && testProperty.mapperLocations().length > 0) {
                 sessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver()
                         .getResources(StringUtils.arrayToCommaDelimitedString(testProperty.mapperLocations())));
             } else {
-                logger.info("The mapper configuration files in your mybatis DAO test is empty! ");
+                logger.warn("The mapper configuration files in your mybatis DAO test is empty! ");
             }
 
             sqlSessionFactory = sessionFactory.getObject();
         } catch (Exception e) {
-            logger.error("not installed sessionFactory ", e);
-            throw new RuntimeException("fail to create session factory");
+            logger.error("Incorrect parameter settings, sqlSessionFactory failed to create.", e);
+            throw new RuntimeException("Mybatis sqlSessionFactory failed to create.");
         }
         return sqlSessionFactory;
     }
