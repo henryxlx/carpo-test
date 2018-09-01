@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
         mapperLocations = {"com/genghis/carpo/basis/area/dao/areainfo.xml"},
         typeAliases = {Area.class},
         mapperInterfaces = {AreaInfoDao.class})
-public class CarpoMybatisSimpleDaoTest extends CarpoMybatisDaoJUnit4SpringContextTests {
+public class SampleCarpoMybatisDaoTest extends CarpoMybatisDaoJUnit4SpringContextTests {
 
     @Autowired
     private AreaInfoDao areaInfoDao;
