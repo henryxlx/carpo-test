@@ -1,4 +1,4 @@
-package com.genghis.carpo.test.spring.sample;
+package com.genghis.carpo.test.spring.mybatis.demo;
 
 import com.genghis.carpo.basis.area.dao.AreaInfoDao;
 import com.genghis.carpo.basis.area.model.Area;
