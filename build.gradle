@@ -22,7 +22,10 @@ ext {
 
 
 dependencies {
-//    testCompile("junit:junit:$junitVersion")
+    testCompile("junit:junit:$junitVersion")
+    testCompile("org.mockito:mockito-core:2.21.0") {
+        exclude group: "org.hamcrest", module: "hamcrest-core"
+    }
     compile("org.slf4j:slf4j-api:1.7.25")
     compile("org.mybatis:mybatis:3.3.1")
     compile("org.mybatis:mybatis-spring:1.2.5")
