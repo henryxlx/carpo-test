@@ -15,9 +15,8 @@ import org.springframework.test.context.web.ServletTestExecutionListener;
  * Created by x230-think-joomla on 2018/8/30.
  */
 @RunWith(SpringRunner.class)
-@TestExecutionListeners({MybatisConfigTestExecutionListener.class,
-        DirtiesContextBeforeModesTestExecutionListener.class,
-        DependencyInjectionTestExecutionListener.class,
-        DirtiesContextTestExecutionListener.class })
-public class CarpoMybatisDaoJUnit4SpringContextTests {
+@TestExecutionListeners(listeners = {MybatisConfigTestExecutionListener.class},
+        inheritListeners = false,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public abstract class CarpoMybatisDaoJUnit4SpringContextTests extends AbstractTransactionalJUnit4SpringContextTests{
 }
