@@ -15,6 +15,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
@@ -33,10 +34,11 @@ public class MybatisConfigTestExecutionListener extends AbstractTestExecutionLis
 
     @Override
     public void prepareTestInstance(TestContext testContext) throws Exception {
-        MybatisTestProperty testProperty = getMybatisTestProperty(testContext);
+        String testClassName = testContext.getTestClass().getName();
+        MybatisTestProperty testProperty = getMybatisTestProperty(testContext, testClassName);
         ApplicationContext applicationContext = testContext.getApplicationContext();
-        DataSource dataSource = getDataSource(applicationContext);
-        SqlSessionFactory sqlSessionFactory = getSqlSessionFactory(testProperty, dataSource);
+        DataSource dataSource = getDataSource(applicationContext, testClassName);
+        SqlSessionFactory sqlSessionFactory = getSqlSessionFactory(testProperty, dataSource, testClassName);
         if (testProperty.mapperInterfaces() != null && testProperty.mapperInterfaces().length > 0) {
             ConfigurableApplicationContext configurableApplicationContext =
                     (ConfigurableApplicationContext) applicationContext;
@@ -59,29 +61,47 @@ public class MybatisConfigTestExecutionListener extends AbstractTestExecutionLis
         }
     }
 
-    private MybatisTestProperty getMybatisTestProperty(TestContext testContext) {
+    private void detectAnnotationElementValue(MybatisTestProperty testProperty, String testClassName) {
+        if (StringUtils.isEmpty(testProperty.configLocation()) &&
+                ObjectUtils.isEmpty(testProperty.mapperInterfaces()) &&
+                ObjectUtils.isEmpty(testProperty.typeAliases()) &&
+                ObjectUtils.isEmpty(testProperty.mapperLocations())) {
+
+            throw new IllegalStateException(String.format("Element values of MybatisTestProperty annnotation " +
+                            "not set for test %s.",
+                    testClassName));
+        }
+    }
+
+    private MybatisTestProperty getMybatisTestProperty(TestContext testContext, String testClassName) {
         MybatisTestProperty testProperty = testContext.getTestClass().getAnnotation(MybatisTestProperty.class);
         if (testProperty == null) {
             logger.error("The annotations MybatisTestProperty for MyBatis integration testing are not found. " +
                     "Please check the test code.");
-            throw new RuntimeException("The MybatisTestProperty annotation are not found");
+            throw new IllegalStateException(String.format("Could not detect MybatisTestProperty " +
+                            "Annotation for test %s : declare Carpo Mybatis test via @MybatisTestProperty.",
+                    testClassName));
         }
+        detectAnnotationElementValue(testProperty, testClassName);
         return testProperty;
     }
 
-    private DataSource getDataSource(ApplicationContext applicationContext) {
+    private DataSource getDataSource(ApplicationContext applicationContext, String testClassName) {
         DataSource dataSource;
         try {
             dataSource = applicationContext.getBean(DataSource.class);
         } catch (BeansException e) {
             logger.error("The data source for MyBatis integration testing is not found. " +
                     "Please check the configuration of the database connection." + e);
-            throw new RuntimeException("JDBC data source in test context is not found");
+            throw new IllegalStateException(String.format("could not obtain DataSource from test context for %s.",
+                    testClassName));
         }
         return dataSource;
     }
 
-    private SqlSessionFactory getSqlSessionFactory(MybatisTestProperty testProperty, DataSource dataSource) {
+    private SqlSessionFactory getSqlSessionFactory(MybatisTestProperty testProperty, DataSource dataSource
+            , String testClassName) {
+
         SqlSessionFactory sqlSessionFactory;
         try {
             SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
@@ -107,7 +127,8 @@ public class MybatisConfigTestExecutionListener extends AbstractTestExecutionLis
             sqlSessionFactory = sessionFactory.getObject();
         } catch (Exception e) {
             logger.error("Incorrect parameter settings, sqlSessionFactory failed to create.", e);
-            throw new RuntimeException("Mybatis sqlSessionFactory failed to create.");
+            throw new IllegalStateException(String.format("Mybatis sqlSessionFactory failed to create for %s.",
+                    testClassName));
         }
         return sqlSessionFactory;
     }
