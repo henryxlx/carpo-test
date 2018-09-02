@@ -2,7 +2,7 @@ package com.genghis.carpo.test.spring.sample;
 
 import com.genghis.carpo.basis.area.dao.AreaInfoDao;
 import com.genghis.carpo.basis.area.model.Area;
-import com.genghis.carpo.test.spring.mybatis.CarpoMybatisDaoJUnit4SpringContextTests;
+import com.genghis.carpo.test.spring.mybatis.CarpoMybatisDaoTxJUnit4SpringContextTests;
 import com.genghis.carpo.test.spring.mybatis.context.MybatisTestProperty;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
         mapperLocations = {"com/genghis/carpo/basis/area/dao/areainfo.xml"},
         typeAliases = {Area.class},
         mapperInterfaces = {AreaInfoDao.class})
-public class SampleCarpoMybatisDaoTest extends CarpoMybatisDaoJUnit4SpringContextTests {
+public class SampleCarpoMybatisDaoTest extends CarpoMybatisDaoTxJUnit4SpringContextTests {
 
     @Autowired
     private AreaInfoDao areaInfoDao;

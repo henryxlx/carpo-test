@@ -18,5 +18,5 @@ import org.springframework.test.context.web.ServletTestExecutionListener;
 @TestExecutionListeners(listeners = {MybatisConfigTestExecutionListener.class},
         inheritListeners = false,
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-public abstract class CarpoMybatisDaoJUnit4SpringContextTests extends AbstractTransactionalJUnit4SpringContextTests{
+public abstract class CarpoMybatisDaoTxJUnit4SpringContextTests extends AbstractTransactionalJUnit4SpringContextTests{
 }
